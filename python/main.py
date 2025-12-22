@@ -1,15 +1,28 @@
-from helper import bitcoin_cli, ln_cli
+import requests
+import os
+from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+
+
+def call_cln(method, params=None):
+    rune = os.environ.get('CLN_RUNE')
+    url = f'http://localhost:3010/v1/{method}'
+    response = requests.post(
+        url,
+        json=params or {},
+        headers={'Rune': rune}
+    )
+    return response.json()
 
 def main():
 
     try:
         # Get blockchain info
-        blockchain_info = bitcoin_cli('getblockchaininfo')
-        print("Blockchain Info:", blockchain_info)
+        rpc = AuthServiceProxy("http://alice:password@localhost:18443")
+        print("Blockchain Info:", rpc.getblockchaininfo())
 
         # Get Lightning node info
-        ln_info = ln_cli('getinfo')
-        print("Lightning Info:", ln_info)
+        ln_info = call_cln('getinfo')
+        print("Lightning Node Info:", ln_info)
 
         # Create a new address for funding using lightning-cli and store it in CLN_ADDRESS
 

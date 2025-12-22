@@ -31,8 +31,12 @@ services:
       - --bitcoin-rpcpassword=password
       - --bitcoin-rpcport=18443
       - --bitcoin-rpcconnect=bitcoind
+      - --clnrest-port=3010
+      - --clnrest-protocol=http
+      - --clnrest-host=0.0.0.0
     ports:
       - "9735:9735"
+      - "3010:3010"
     volumes:
       - lightning-data:/root/.lightning
     networks:

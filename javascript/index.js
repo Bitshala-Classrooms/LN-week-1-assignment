@@ -1,12 +1,29 @@
-const fs = require('fs').promises;
-const { bitcoinCli, lightningCli } = require('./helper');
+const fs = require("fs").promises;
+const axios = require("axios");
+const bitcoin = require("bitcoin-core");
+
+async function callCln(method, params = {}) {
+  const response = await axios.post(
+    `http://localhost:3010/v1/${method}`,
+    params,
+    { headers: { Rune: process.env.CLN_RUNE } },
+  );
+  return response.data;
+}
 
 async function main() {
-    // Example: Get blockchain info and lightning node info
-    const blockchainInfo = await bitcoinCli('getblockchaininfo');
-    console.log('Blockchain Info:', blockchainInfo);
-    const nodeInfo = await lightningCli('getinfo');
-    console.log('Node Info:', nodeInfo);
+  // Example: Get blockchain info and lightning node info
+  const bitcoinClient = new bitcoin({
+    network: "regtest",
+    username: "alice",
+    password: "password",
+    port: 18443,
+  });
+
+  console.log("Bitcoin Node Info:", await bitcoinClient.getBlockchainInfo());
+
+  const lnInfo = await callCln("getinfo");
+  console.log("Lightning Node Info:", lnInfo);
 
     // Create a new address for funding using lightning-cli and store it in CLN_ADDRESS
 

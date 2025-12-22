@@ -115,27 +115,79 @@ Helper functions abstract Docker CLI interactions:
    # https://docs.docker.com/get-docker/
    ```
 
-2. **Start the nodes**
+2. **Install Language Components**
+
+   #### Bash
+   - **Version** 4.0 or higher (usually pre-installed on Linux/macOS)
+    ```bash
+    # check version
+    bash --version
+    
+    # to install jq [JSON processor to parse JSON responses]
+    sudo apt-get update && sudo apt-get install -y jq       # Ubuntu/Debian
+    brew install jq                                         # macOS
+    ```
+
+   #### JavaScript
+   - **Node.js Version** 20.x or higher
+
+   ```bash
+    # check version
+    node --version
+    npm --version
+    
+    # install nvm
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+    nvm install 20
+    nvm use 20
+    
+    # install project dependencies
+    cd javascript
+    npm install
+    ```
+
+   #### Python
+   - **Version** 3.9 or higher
+    ```bash
+    # check version
+    python3 --version
+    pip3 --version
+
+    # install python
+    sudo apt-get update && sudo apt-get install -y python3 python3-pip python3-venv       # Ubuntu/Debian
+    brew install python@3.9                                                               # macOS
+
+    # install required dependencies
+    pip3 install requests python-bitcoinrpc
+    ```
+
+   #### Rust
+   - **Version** 1.70.0 or higher
+    ```bash
+    # check version
+    rustc --version
+    cargo --version
+
+    # installation via rustup
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh                        # Linux/macOS
+    # Follow the prompts, then reload your shell.
+    source $HOME/.cargo/env
+
+    # build essentials
+    sudo apt-get install -y build-essential pkg-config libssl-dev                         # Ubuntu/Debian
+
+    # Build the project
+    cd rust
+    cargo build
+    ```
+
+3. **Start the nodes**
    ```bash
    docker-compose up -d
    ```
 
-3. **Install language dependencies**
-   ```bash
-   # For JavaScript
-   npm install
-
-   # For Python
-   python -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-
-   # For Rust
-   cd rust && cargo build
-   ```
-
 ### Local Testing Steps
-It's a good idea to r un the whole test locally to ensure your code is working properly.
+It's a good idea to run the whole test locally to ensure your code is working properly.
 
 - Uncomment the specific line in [run.sh](./run.sh) corresponding to your language of choice. 
 - Grant execution permission to [test.sh](./test.sh), by running `chmod +x ./test.sh`.

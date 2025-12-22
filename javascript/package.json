@@ -8,6 +8,6 @@
   },
   "dependencies": {
     "bitcoin-core": "^4.0.0",
-    "fs": "0.0.1-security"
+    "axios": "^1.13.0"
   }
 }

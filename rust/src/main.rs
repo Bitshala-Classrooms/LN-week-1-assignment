@@ -1,17 +1,34 @@
-mod helper;
+use bitcoincore_rpc::{Auth, Client as BitcoinClient, RpcApi};
+use reqwest::blocking::Client;
+use serde_json::Value;
 
-use helper::{bitcoin_cli, ln_cli};
-use std::{io::Write, thread, time::Duration};
+fn call_cln(method: &str, params: Value) -> Result<Value, Box<dyn std::error::Error>> {
+    let rune = std::env::var("CLN_RUNE")?;
+    let url = format!("http://localhost:3010/v1/{}", method);
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    let response = client
+        .post(&url)
+        .json(&params)
+        .header("Rune", rune)
+        .send()?
+        .json::<Value>()?;
+
+    Ok(response)
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Get blockchain info
-    let blockchain_info = bitcoin_cli("getblockchaininfo")?;
-    println!("Blockchain Info: {}", blockchain_info);
+    let rpc = BitcoinClient::new(
+        "http://localhost:18443",
+        Auth::UserPass("alice".to_string(), "password".to_string()),
+    )?;
+
+    println!("Blockchain Info: {:?}", rpc.get_blockchain_info()?);
 
     // Get Lightning node info
-    let node_info = ln_cli("getinfo")?;
-    println!("Node Info: {}", node_info);
+    let ln_info = call_cln("getinfo", serde_json::json!({}))?;
+    println!("Lightning Node Info: {}", ln_info);
 
     // Create a new address for funding using lightning-cli and store it in CLN_ADDRESS
 

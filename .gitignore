@@ -6,3 +6,5 @@ install
 target/
 /venv
 __pycache__/
+javascript/node_modules/
+javascript/package-lock.json
