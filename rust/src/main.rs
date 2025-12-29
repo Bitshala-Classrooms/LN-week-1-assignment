@@ -1,71 +1,60 @@
-use bitcoin::hex::DisplayHex;
-use bitcoincore_rpc::bitcoin::Amount;
-use bitcoincore_rpc::{Auth, Client, RpcApi};
-use serde::Deserialize;
-use serde_json::json;
-use std::fs::File;
-use std::io::Write;
+use bitcoincore_rpc::{Auth, Client as BitcoinClient, RpcApi};
+use reqwest::blocking::Client;
+use serde_json::Value;
 
-// Node access params
-const RPC_URL: &str = "http://127.0.0.1:18443"; // Default regtest RPC port
-const RPC_USER: &str = "alice";
-const RPC_PASS: &str = "password";
+fn call_cln(method: &str, params: Value) -> Result<Value, Box<dyn std::error::Error>> {
+    let rune = std::env::var("CLN_RUNE")?;
+    let url = format!("http://localhost:3010/v1/{}", method);
 
-// You can use calls not provided in RPC lib API using the generic `call` function.
-// An example of using the `send` RPC call, which doesn't have exposed API.
-// You can also use serde_json `Deserialize` derivation to capture the returned json result.
-fn send(rpc: &Client, addr: &str) -> bitcoincore_rpc::Result<String> {
-    let args = [
-        json!([{addr : 100 }]), // recipient address
-        json!(null),            // conf target
-        json!(null),            // estimate mode
-        json!(null),            // fee rate in sats/vb
-        json!(null),            // Empty option object
-    ];
+    let client = Client::new();
+    let response = client
+        .post(&url)
+        .json(&params)
+        .header("Rune", rune)
+        .send()?
+        .json::<Value>()?;
 
-    #[derive(Deserialize)]
-    struct SendResult {
-        complete: bool,
-        txid: String,
-    }
-    let send_result = rpc.call::<SendResult>("send", &args)?;
-    assert!(send_result.complete);
-    Ok(send_result.txid)
+    Ok(response)
 }
 
-fn main() -> bitcoincore_rpc::Result<()> {
-    // Connect to Bitcoin Core RPC
-    let rpc = Client::new(
-        RPC_URL,
-        Auth::UserPass(RPC_USER.to_owned(), RPC_PASS.to_owned()),
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Get blockchain info
+    let rpc = BitcoinClient::new(
+        "http://localhost:18443",
+        Auth::UserPass("alice".to_string(), "password".to_string()),
     )?;
 
-    // Get blockchain info
-    let blockchain_info = rpc.get_blockchain_info()?;
-    println!("Blockchain Info: {:?}", blockchain_info);
+    println!("Blockchain Info: {:?}", rpc.get_blockchain_info()?);
 
-    // Create/Load the wallets, named 'Miner' and 'Trader'. Have logic to optionally create/load them if they do not exist or not loaded already.
+    // Get Lightning node info
+    let ln_info = call_cln("getinfo", serde_json::json!({}))?;
+    println!("Lightning Node Info: {}", ln_info);
 
-    // Generate spendable balances in the Miner wallet. How many blocks needs to be mined?
+    // Create a new address for funding using lightning-cli and store it in CLN_ADDRESS
 
-    // Load Trader wallet and generate a new address
+    // Check if wallet exists, if not Create a bitcoin wallet named 'mining_wallet' using bitcoin-cli for mining
 
-    // Create parent transaction in the Miner wallet, sending 70 BTC to the Trader wallet address
-    // Remember to signal for RBF
+    // Generate a new address and mine blocks to it. How many blocks need to mined? Why?
 
-    // Sign and broadcast the transaction
+    // Fund the Lightning node by sending 0.1 BTC from the mining wallet to CLN_ADDRESS
 
-    // Output the parent transaction in the specified format to parent.json
+    // Confirm the funding transaction by mining 6 blocks
 
-    // Create and child transaction that spends the parent transaction output
+    // Verify Lightning wallet balance using lightning-cli listfunds
 
-    // Output the child transaction in the specified format to child.json
+    // Create an invoice with parameters and store the invoice string:
+    // - Amount: 50,000 satoshis (50000000 millisatoshis)
+    // - Label: Generate unique label using timestamp (e.g., "invoice_$(date +%s)")
+    // - Description: "Coffee Payment"
+    // - Expiry: 3600 seconds
 
-    // Fee bump the Parent transaction using RBF. Do not use bitcoin-cli bumpfee
-
-    // Sign and broadcast the fee-bumped transaction
-
-    // Output the fee-bumped parent transaction in the specified format to parent-rbf.json
+    // Decode the invoice string using lightning-cli decodepay and verify the parameters
+    // Output the invoice details in the specified format to out.txt
+    // - Payment hash
+    // - BOLT11 invoice string
+    // - Amount
+    // - Description
+    // - Expiry time
 
     Ok(())
 }
